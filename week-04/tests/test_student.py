@@ -1,13 +1,25 @@
-"""在这里与 Agent 编写自己的测试；当前没有现成测试。
+def test_make_variant_keeps_results_independent(make_variant):
+    source = {"seed": 13, "sample_sizes": [250, 750, 1250, 1750]}
+    expected_source = {"seed": 13, "sample_sizes": [250, 750, 1250, 1750]}
+    expected_result = {"seed": 2027, "sample_sizes": [250, 900, 1250, 1750]}
 
-每个测试用 def test_某个承诺(make_variant): 接收候选函数。
-make_variant 是课程 fixture；不要直接从 variant/examples import 实现，
-否则 --impl 无法切换你的测试实际检查的对象。
+    first = make_variant(source, seed=2027, index=1, replacement=900)
+    second = make_variant(source, seed=2027, index=1, replacement=900)
 
-先独立写出输入与答案，再检查返回内容、旧配置、字典和列表身份。
-用同一份学生测试拒绝 direct / shallow，并接受 reference。
-必做：自己换一组合法输入，检查两次调用与后续修改是否相互影响。
+    assert first == expected_result
+    assert second == expected_result
+    assert source == expected_source
 
-这里不提供跳过测试或永远为真的占位断言。
-若单独运行本文件显示 no tests ran，表示你还没有写出自己的测试。
-"""
+    assert first is not source
+    assert second is not source
+    assert first is not second
+    assert first["sample_sizes"] is not source["sample_sizes"]
+    assert second["sample_sizes"] is not source["sample_sizes"]
+    assert first["sample_sizes"] is not second["sample_sizes"]
+
+    first["seed"] = 2028
+    first["sample_sizes"][1] = 901
+    first["sample_sizes"].append(9999)
+
+    assert second == expected_result
+    assert source == expected_source
